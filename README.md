@@ -159,7 +159,7 @@ node 'sentinel.my.domain' {
         parallel-syncs          => 1,
         failover_timeout        => 180000
       },
-      'securetRedisCluster' => {
+      'securedRedisCluster' => {
         master_host             => '10.20.30.1',
         master_port             => 6379,
         quorum                  => 2,
@@ -364,13 +364,13 @@ See the setup examples.
 
 #####`sentinel_name`
 
-Name of Redis instance. Default: call name of the function.
+Name of Redis Sentinel instance. Default: call name of the function.
 The name is used to create the init script(s), which follows the pattern
 `redis-sentinel_${sentinel_name}`
 
 #####`sentinel_port`
 
-Listen port of Redis. Default: 6379
+Listen port of Redis Sentinel. Default: 26379
 
 #####`sentinel_log_dir`
 
@@ -406,11 +406,11 @@ Hashmap of monitors.
 
 #####`running`
 
-Configure if Redis should be running or not. Default: true (boolean)
+Configure if Redis Sentinel should be running or not. Default: true (boolean)
 
 #####`enabled`
 
-Configure if Redis is started at boot. Default: true (boolean)
+Configure if Redis Sentinel is started at boot. Default: true (boolean)
 
 #####`force_rewrite`
 
