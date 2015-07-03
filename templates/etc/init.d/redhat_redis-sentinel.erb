@@ -23,7 +23,7 @@ prog="redis-sentinel_<%= @sentinel_name %>"
 pidfile="<%= @sentinel_pid_dir %>/redis-sentinel_<%= @sentinel_name %>.pid"
 logfile="<%= @sentinel_log_dir -%>/redis-sentinel_<%= @sentinel_name %>.log"
 
-SENTINEL_CONF_FILE="/etc/redis-sentinel_<%= @sentinel_name %>.conf"
+SENTINEL_CONF_FILE="<%= @redis_config_dir %>/redis-sentinel_<%= @sentinel_name %>.conf"
 
 lockfile="/var/lock/subsys/redis-sentinel_<%= @sentinel_name %>"
 

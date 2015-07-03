@@ -22,7 +22,7 @@ redis="<%= @redis_install_dir %>/redis-server"
 prog="redis_<%= @redis_name %>"
 pidfile="<%= @redis_pid_dir %>/redis_<%= @redis_name %>.pid"
 
-REDIS_CONF_FILE="/etc/redis_<%= @redis_name %>.conf"
+REDIS_CONF_FILE="<%= @redis_config_dir %>/redis_<%= @redis_name %>.conf"
 
 #[ -f /etc/sysconfig/redis ] && . /etc/sysconfig/redis
 

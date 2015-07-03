@@ -17,6 +17,7 @@
 class redis::install (
   $redis_version     = $::redis::params::redis_version,
   $redis_build_dir   = $::redis::params::redis_build_dir,
+  $redis_config_dir  = $::redis::params::redis_config_dir,
   $redis_install_dir = $::redis::params::redis_install_dir,
   $redis_package     = $::redis::params::redis_install_package,
   $download_tool     = $::redis::params::download_tool
@@ -124,5 +125,10 @@ class redis::install (
       redis_build_dir   => $redis_build_dir,
       redis_install_dir => $redis_install_dir,
     }
+    
+    file { $redis_config_dir:
+      ensure => directory,
+    }
+    
   }
 }

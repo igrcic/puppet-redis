@@ -2,6 +2,7 @@
 #
 class redis::params {
   $redis_version         = 'stable'
+  $redis_config_dir      = '/etc'
   $redis_build_dir       = '/opt'
   $redis_install_dir     = '/usr/bin'
   $redis_install_package = false

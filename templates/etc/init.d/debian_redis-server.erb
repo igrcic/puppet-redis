@@ -15,7 +15,7 @@ REDIS_EXEC="<%= @redis_install_dir %>/redis-server"
 REDIS_NAME="redis-server_<%= @redis_name %>"
 REDIS_PID="<%= @redis_pid_dir %>/redis_<%= @redis_name %>.pid"
 REDIS_LOCKFILE="/var/lock/redis_<%= @redis_name %>"
-REDIS_CONF_FILE="/etc/redis_<%= @redis_name %>.conf"
+REDIS_CONF_FILE="<%= @redis_config_dir %>/redis_<%= @redis_name %>.conf"
 
 [ -x "$REDIS_EXEC" ] || exit 5
 

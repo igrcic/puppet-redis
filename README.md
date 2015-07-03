@@ -199,6 +199,12 @@ Default is '/opt/' (string)
 The dir to store redis source code. This will result in a
 directoy like '/opt/redis-2.8.8/'
 
+#####`redis_config_dir`
+
+Default is '/etc/' (string)
+The dir to store redis and sentinel config files. This will result in a
+file like '/etc/redis_server.conf'
+
 #####`redis_install_dir`
 
 Default is '/usr/bin' (string).

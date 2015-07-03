@@ -107,6 +107,7 @@ define redis::server (
   $force_rewrite           = false,
 ) {
 
+  $redis_config_dir  = $::redis::install::redis_config_dir
   $redis_install_dir = $::redis::install::redis_install_dir
   $redis_init_script = $::operatingsystem ? {
     /(Debian|Ubuntu)/                                          => 'redis/etc/init.d/debian_redis-server.erb',
@@ -118,11 +119,11 @@ define redis::server (
 
   # redis conf file
   file {
-    "/etc/redis_${redis_name}.conf":
+    "${redis_config_dir}/redis_${redis_name}.conf":
       ensure  => file,
       content => template('redis/etc/redis.conf.erb'),
       replace => $force_rewrite,
-      require => Class['redis::install'];
+      require => Class['redis::install']
   }
 
   # startup script
@@ -131,7 +132,7 @@ define redis::server (
     mode    => '0755',
     content => template($redis_init_script),
     require => [
-      File["/etc/redis_${redis_name}.conf"],
+      File["${redis_config_dir}/redis_${redis_name}.conf"],
       File["${redis_dir}/redis_${redis_name}"]
     ],
     notify  => Service["redis-server_${redis_name}"],
@@ -163,7 +164,7 @@ define redis::server (
     content => template('redis/redis_logrotate.conf.erb'),
     require => [
       Package['logrotate'],
-      File["/etc/redis_${redis_name}.conf"],
+      File["${redis_config_dir}/redis_${redis_name}.conf"],
     ]
   }
 

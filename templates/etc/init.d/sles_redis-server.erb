@@ -24,7 +24,7 @@
 EXEC=/usr/sbin/redis-server
 USER=redis
 STATE=<%= @redis_pid_dir %>
-CONF=/etc
+CONF=<%= @redis_config_dir %>
 PIDFILE=${STATE}/redis_<%= @redis_name %>.pid
 CONFIG=${CONF}/redis_<%= @redis_name %>.conf
 

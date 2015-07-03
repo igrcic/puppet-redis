@@ -69,6 +69,7 @@ define redis::sentinel (
   # validate parameters
   validate_bool($force_rewrite)
   
+  $redis_config_dir  = $::redis::install::redis_config_dir
   $redis_install_dir = $::redis::install::redis_install_dir
   $sentinel_init_script = $::operatingsystem ? {
     /(Debian|Ubuntu)/                                          => 'redis/etc/init.d/debian_redis-sentinel.erb',
@@ -78,7 +79,7 @@ define redis::sentinel (
 
   # redis conf file
   file {
-    "/etc/redis-sentinel_${sentinel_name}.conf":
+    "${redis_config_dir}/redis-sentinel_${sentinel_name}.conf":
       ensure  => file,
       content => template('redis/etc/sentinel.conf.erb'),
       replace => $force_rewrite,
@@ -111,7 +112,7 @@ define redis::sentinel (
     content => template('redis/sentinel_logrotate.conf.erb'),
     require => [
       Package['logrotate'],
-      File["/etc/redis-sentinel_${sentinel_name}.conf"],
+      File["${redis_config_dir}/redis-sentinel_${sentinel_name}.conf"],
     ]
   }
 
