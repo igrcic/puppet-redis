@@ -45,6 +45,7 @@ define redis::sentinel (
   $ensure           = 'present',
   $sentinel_name    = $name,
   $sentinel_port    = 26379,
+  $sentinel_dir     = '/tmp',
   $sentinel_log_dir = '/var/log',
   $sentinel_pid_dir = '/var/run',
   $monitors         = {

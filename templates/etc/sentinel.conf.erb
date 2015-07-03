@@ -7,10 +7,11 @@ daemonize yes
 logfile <%= @sentinel_log_dir -%>/redis-sentinel_<%= @sentinel_name %>.log
 
 port <%= @sentinel_port -%>
+dir  "<%= @sentinel_dir -%>"
 
-<%
-  #rules = scope.lookupvar('redis::sentinel::monitors')
-  @monitors.sort.each do |name, rule| %>
+
+<%  @monitors.sort.each do |name, rule| %>
+
 # monitor <%= name %>
 sentinel monitor <%= name -%> <%= rule['master_host'] -%>  <%= rule['master_port'] -%> <%= rule['quorum'] %>
 sentinel down-after-milliseconds <%= name -%> <%= rule['down_after_milliseconds'] %>
