@@ -1,0 +1,30 @@
+# redis-sentinel - Redis Monitor
+#
+# Redis Sentinel is a monitor for redis servers
+
+start on (local-filesystems and runlevel [2345])
+stop on runlevel [016]
+respawn
+expect fork
+limit nofile 10032 65000
+
+env SENTINEL_EXEC="<%= @redis_install_dir %>/redis-sentinel"
+env SENTINEL_PID="<%= @redis_pid_dir %>/<%= @sentinel_instance_name %>.pid"
+env SENTINEL_CONF="<%= @sentinel_config_script %>"
+
+
+exec start-stop-daemon \
+    --start \
+    --chuid <%= @redis_user%>:<%= @redis_group%> \
+    --pidfile $SENTINEL_PID \
+    --umask 007 \
+    --exec $SENTINEL_EXEC -- $SENTINEL_CONF
+
+#pre-start script
+#    echo `date` |mail -s "REDIS <%= @redis_instance_name %> RESTARTED" root
+#end script
+
+#post-stop script
+#    echo `date` |mail -s "REDIS <%= @redis_instance_name %> STOPPED" root
+#end script
+

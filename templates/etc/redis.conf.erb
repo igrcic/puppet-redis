@@ -15,12 +15,12 @@
 # units are case insensitive so 1GB 1Gb 1gB are all the same.
 
 # By default Redis does not run as a daemon. Use 'yes' if you need it.
-# Note that Redis will write a pid file in <%= @redis_pid_dir %>/redis_<%= @redis_name %>.pid when daemonized.
+# Note that Redis will write a pid file in <%= @redis_pid_dir %>/<%= @redis_instance_name %>.pid when daemonized.
 daemonize yes
 
 # When running daemonized, Redis writes a pid file in <%= @redis_pid_dir %>/redis.pid by
 # default. You can specify a custom pid file location here.
-pidfile <%= @redis_pid_dir %>/redis_<%= @redis_name %>.pid
+pidfile <%= @redis_pid_dir %>/<%= @redis_instance_name %>.pid
 
 # Accept connections on the specified port, default is 6379.
 # If port 0 is specified Redis will not listen on a TCP socket.
@@ -51,7 +51,7 @@ loglevel <%= @redis_loglevel %>
 # Specify the log file name. Also 'stdout' can be used to force
 # Redis to log on the standard output. Note that if you use standard
 # output for logging but daemonize, logs will be sent to /dev/null
-logfile <%= @redis_log_dir %>/redis_<%= @redis_name %>.log
+logfile <%= @redis_log_dir %>/<%= @redis_instance_name %>.log
 
 # To enable logging to the system logger, just set 'syslog-enabled' to yes,
 # and optionally update the other syslog parameters to suit your needs.
@@ -105,7 +105,7 @@ dbfilename <%= @redis_dbfilename %>
 # Also the Append Only File will be created inside this directory.
 #
 # Note that you must specify a directory here, not a file name.
-dir <%= @redis_dir %>/redis_<%= @redis_name %>
+dir <%= @redis_work_dir %>
 
 ################################# REPLICATION #################################
 

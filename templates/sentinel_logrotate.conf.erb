@@ -2,7 +2,7 @@
 
 # Rotate redis sentinel log with standard logrotate.
 
-<%= @sentinel_log_dir %>/redis-sentinel_<%= @sentinel_name %>.log {
+<%= @redis_log_dir %>/<%= @sentinel_instance_name %>.log {
  weekly
  missingok
  copytruncate

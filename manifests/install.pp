@@ -1,4 +1,4 @@
-# == Class: redis::install
+# == Class: redis::install    owner   => $redis_user
 #
 # Installs redis from source (http://redis.googlecode.com).
 # Has to be includes before the redis::server functions are called.
@@ -15,12 +15,17 @@
 #   The dir to which the newly built redis binaries are copied. Default value is '/usr/bin'.
 #
 class redis::install (
-  $redis_version     = $::redis::params::redis_version,
-  $redis_build_dir   = $::redis::params::redis_build_dir,
-  $redis_config_dir  = $::redis::params::redis_config_dir,
-  $redis_install_dir = $::redis::params::redis_install_dir,
-  $redis_package     = $::redis::params::redis_install_package,
-  $download_tool     = $::redis::params::download_tool
+  $redis_version         = $::redis::params::redis_version,
+  $redis_build_dir       = $::redis::params::redis_build_dir,
+  $redis_config_dir      = $::redis::params::redis_config_dir,
+  $redis_install_dir     = $::redis::params::redis_install_dir,
+  $redis_package         = $::redis::params::redis_install_package,
+  $download_tool         = $::redis::params::download_tool,
+  $redis_user            = $::redis::params::redis_user,
+  $redis_group           = $::redis::params::redis_group,
+  $redis_log_dir         = $::redis::params::redis_log_dir,
+  $redis_pid_dir         = $::redis::params::redis_pid_dir,
+  $use_upstart_script    = false
 ) inherits redis {
   if ( $redis_package == true ) {
     case $::operatingsystem {
@@ -55,6 +60,20 @@ class redis::install (
         fail('The module does not support this OS.')
       }
     }
+
+    group { $redis_group:
+        ensure => 'present',
+        system => true,
+    } ->
+
+    user { $redis_user:
+        ensure     => 'present',
+        comment    => 'Redis system user',
+        shell      => '/bin/false',
+        gid        => $redis_group,
+        system     => true,
+        require    => group[$redis_group],
+    } ->
 
     exec { "Make dir ${redis_build_dir}":
       command => "mkdir -p ${redis_build_dir}",
@@ -127,8 +146,17 @@ class redis::install (
     }
     
     file { $redis_config_dir:
-      ensure => directory,
+      ensure => directory 
     }
     
   }
+  
+  package { 'logrotate': ensure => installed; }
+  
+  file { [$redis_pid_dir, $redis_log_dir]:
+    ensure  => directory,
+    mode    => '0755',
+    owner   => $redis_user
+  }
+
 }

@@ -83,8 +83,6 @@ define redis::server (
   $redis_nr_dbs            = 1,
   $redis_dbfilename        = 'dump.rdb',
   $redis_dir               = '/var/lib',
-  $redis_log_dir           = '/var/log',
-  $redis_pid_dir           = '/var/run',
   $redis_loglevel          = 'notice',
   $running                 = true,
   $enabled                 = true,
@@ -106,74 +104,79 @@ define redis::server (
   $save                    = [],
   $force_rewrite           = false,
 ) {
+  
+  $redis_user            = $::redis::params::redis_user
+  $redis_group           = $::redis::params::redis_group   
+  $redis_instance_name = "redis-server-${redis_name}"
+        
+  $redis_log_dir         = $::redis::params::redis_log_dir
+  $redis_pid_dir         = $::redis::params::redis_pid_dir      
+  $redis_install_dir     = $::redis::install::redis_install_dir
+  $redis_config_dir      = $::redis::install::redis_config_dir
+  $redis_config_script   = "${redis_config_dir}/${redis_instance_name}.conf"
+  $redis_work_dir        = "${redis_dir}/${redis_instance_name}"
+  
+  if $::redis::install::use_upstart_script {
+    
+    $redis_init_script_template = 'redis/etc/init/redis-server.conf.erb'
+    $redis_init_script = "/etc/init/${redis_instance_name}.conf"
+    $redis_init_script_mode = '0644'
 
-  $redis_config_dir  = $::redis::install::redis_config_dir
-  $redis_install_dir = $::redis::install::redis_install_dir
-  $redis_init_script = $::operatingsystem ? {
-    /(Debian|Ubuntu)/                                          => 'redis/etc/init.d/debian_redis-server.erb',
-    /(Fedora|RedHat|CentOS|OEL|OracleLinux|Amazon|Scientific)/ => 'redis/etc/init.d/redhat_redis-server.erb',
-    /(SLES)/                                                   => 'redis/etc/init.d/sles_redis-server.erb',
-    default                                                    => UNDEF,
+  } else {
+
+    $redis_init_script_template = $::operatingsystem ? {
+      /(Debian|Ubuntu)/ => 'redis/etc/init.d/debian_redis-server.erb',
+      /(Fedora|RedHat|CentOS|OEL|OracleLinux|Amazon|Scientific)/ => 'redis/etc/init.d/redhat_redis-server.erb',
+      /(SLES)/          => 'redis/etc/init.d/sles_redis-server.erb',
+      default           => UNDEF,      
+      }
+    $redis_init_script = "/etc/init.d/${redis_instance_name}"
+    $redis_init_script_mode = '0755'    
   }
-  $redis_2_6_or_greater = versioncmp($::redis::install::redis_version,'2.6') >= 0
+  $redis_2_6_or_greater = versioncmp($::redis::install::redis_version, '2.6') >= 0
+
+  File {
+    owner  => $redis_user,   
+    mode   => '0644'
+  }
 
   # redis conf file
-  file {
-    "${redis_config_dir}/redis_${redis_name}.conf":
-      ensure  => file,
-      content => template('redis/etc/redis.conf.erb'),
-      replace => $force_rewrite,
-      require => Class['redis::install']
-  }
-
-  # startup script
-  file { "/etc/init.d/redis-server_${redis_name}":
+  file { $redis_config_script:
     ensure  => file,
-    mode    => '0755',
-    content => template($redis_init_script),
-    require => [
-      File["${redis_config_dir}/redis_${redis_name}.conf"],
-      File["${redis_dir}/redis_${redis_name}"]
-    ],
-    notify  => Service["redis-server_${redis_name}"],
-  }
+    content => template('redis/etc/redis.conf.erb'),
+    replace => $force_rewrite,
+    require => Class['redis::install'],  
+  } ->  
 
-  # path for persistent data
-  # If we specify a directory that's not default we need to pass it as hash
-  # and ensure that we do not have duplicate warning, when we have multiple
-  # redis Instances on one host
-  if ! defined(File[$redis_dir]) {
-    file { $redis_dir:
-      ensure  => directory,
-      require => Class['redis::install'],
-    }
-  }
-
-  file { "${redis_dir}/redis_${redis_name}":
+  file { $redis_work_dir:
     ensure  => directory,
-    require => Class['redis::install'],
-  }
+    mode    => '0755',
+  } ->
 
-  # install and configure logrotate
-  if ! defined(Package['logrotate']) {
-    package { 'logrotate': ensure => installed; }
-  }
-
-  file { "/etc/logrotate.d/redis-server_${redis_name}":
+  # redis startup script
+  file { $redis_init_script:
     ensure  => file,
-    content => template('redis/redis_logrotate.conf.erb'),
-    require => [
-      Package['logrotate'],
-      File["${redis_config_dir}/redis_${redis_name}.conf"],
-    ]
-  }
-
+    mode    => $redis_init_script_mode,
+    content => template($redis_init_script_template),
+    notify  => Service[$redis_instance_name],
+    owner  => 'root',       
+  } ~>
+  
   # manage redis service
-  service { "redis-server_${redis_name}":
+  service { $redis_instance_name:
     ensure     => $running,
     enable     => $enabled,
     hasstatus  => true,
     hasrestart => true,
-    require    => File["/etc/init.d/redis-server_${redis_name}"]
   }
+
+  file { "/etc/logrotate.d/${redis_instance_name}":
+    ensure  => file,
+    content => template('redis/redis_logrotate.conf.erb'),
+    require => [
+      File[$redis_config_script]
+    ],
+    owner  => 'root',    
+  }    
+
 }

@@ -1,0 +1,30 @@
+# redis-server - Redis Datastore Server
+#
+# Redis is a key value in memory persistent datastore
+
+start on (local-filesystems and runlevel [2345])
+stop on runlevel [016]
+respawn
+expect fork
+limit nofile 10032 65000
+
+env REDIS_EXEC="<%= @redis_install_dir %>/redis-server"
+env REDIS_PID="<%= @redis_pid_dir %>/<%= @redis_instance_name %>.pid"
+env REDIS_CONF="<%= @redis_config_script %>"
+
+
+exec start-stop-daemon \
+    --start \
+    --chuid <%= @redis_user%>:<%= @redis_group%> \
+    --pidfile $REDIS_PID \
+    --umask 007 \
+    --exec $REDIS_EXEC -- $REDIS_CONF
+
+#pre-start script
+#    echo `date` |mail -s "REDIS <%= @redis_instance_name %> RESTARTED" root
+#end script
+
+#post-stop script
+#    echo `date` |mail -s "REDIS <%= @redis_instance_name %> STOPPED" root
+#end script
+

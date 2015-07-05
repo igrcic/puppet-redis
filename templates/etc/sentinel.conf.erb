@@ -4,7 +4,8 @@
 
 daemonize yes
 
-logfile "<%= @sentinel_log_dir -%>/redis-sentinel_<%= @sentinel_name %>.log"
+pidfile  <%= @redis_pid_dir -%>/<%= @sentinel_instance_name -%>.pid
+logfile "<%= @redis_log_dir -%>/<%= @sentinel_instance_name -%>.log"
 
 port <%= @sentinel_port %>
 dir  "<%= @sentinel_dir %>"

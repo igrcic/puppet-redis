@@ -46,8 +46,6 @@ define redis::sentinel (
   $sentinel_name    = $name,
   $sentinel_port    = 26379,
   $sentinel_dir     = '/tmp',
-  $sentinel_log_dir = '/var/log',
-  $sentinel_pid_dir = '/var/run',
   $monitors         = {
     'mymaster' => {
       master_host             => '127.0.0.1',
@@ -70,51 +68,68 @@ define redis::sentinel (
   # validate parameters
   validate_bool($force_rewrite)
   
-  $redis_config_dir  = $::redis::install::redis_config_dir
-  $redis_install_dir = $::redis::install::redis_install_dir
-  $sentinel_init_script = $::operatingsystem ? {
-    /(Debian|Ubuntu)/                                          => 'redis/etc/init.d/debian_redis-sentinel.erb',
-    /(Fedora|RedHat|CentOS|OEL|OracleLinux|Amazon|Scientific)/ => 'redis/etc/init.d/redhat_redis-sentinel.erb',
-    default                                                    => UNDEF,
+  $redis_user              = $::redis::params::redis_user
+  $redis_group             = $::redis::params::redis_group
+  $sentinel_instance_name  = "redis-sentinel-${sentinel_name}"
+    
+  $redis_log_dir           = $::redis::params::redis_log_dir
+  $redis_pid_dir           = $::redis::params::redis_pid_dir  
+  $redis_install_dir       = $::redis::install::redis_install_dir
+  $redis_config_dir        = $::redis::install::redis_config_dir  
+  $sentinel_config_script  = "${redis_config_dir}/${sentinel_instance_name}.conf"
+  
+  if $::redis::install::use_upstart_script {
+    
+    $sentinel_init_script_template = 'redis/etc/init/redis-sentinel.conf.erb'
+    $sentinel_init_script = "/etc/init/${sentinel_instance_name}.conf"
+    $sentinel_init_script_mode = '0644'
+  } else {
+    
+    $sentinel_init_script_template = $::operatingsystem ? {
+		  /(Debian|Ubuntu)/                                          => 'redis/etc/init.d/debian_redis-sentinel.erb',
+		  /(Fedora|RedHat|CentOS|OEL|OracleLinux|Amazon|Scientific)/ => 'redis/etc/init.d/redhat_redis-sentinel.erb',
+		  default                                                    => UNDEF,
+    }
+    $sentinel_init_script = "/etc/init.d/${sentinel_instance_name}.conf"
+    $sentinel_init_script_mode = '0755'
   }
-
-  # redis conf file
-  file {
-    "${redis_config_dir}/redis-sentinel_${sentinel_name}.conf":
-      ensure  => file,
-      content => template('redis/etc/sentinel.conf.erb'),
-      replace => $force_rewrite,
-      require => Class['redis::install'];
-      
-  }->
-
-  # startup script
-  file { "/etc/init.d/redis-sentinel_${sentinel_name}":
+  
+  File {
+    owner  => $redis_user,   
+    mode   => '0644'
+  }
+  
+  # sentinel conf file
+  file { $sentinel_config_script:
     ensure  => file,
-    mode    => '0755',
-    content => template($sentinel_init_script),
-  }~>
+    content => template('redis/etc/sentinel.conf.erb'),
+    replace => $force_rewrite,
+    require => Class['redis::install'];
+  } ->
+
+  # sentinel startup script
+  file { $sentinel_init_script:
+    ensure  => file,
+    mode    => $sentinel_init_script_mode,
+    content => template($sentinel_init_script_template),
+    owner  => 'root',  
+  } ~>
 
   # manage sentinel service
-  service { "redis-sentinel_${sentinel_name}":
+  service { $sentinel_instance_name:
     ensure     => $running,
     enable     => $enabled,
     hasstatus  => true,
     hasrestart => true,
   }
 
-  # install and configure logrotate
-  if ! defined(Package['logrotate']) {
-    package { 'logrotate': ensure => installed; }
-  }
-
-  file { "/etc/logrotate.d/redis-sentinel_${sentinel_name}":
+  file { "/etc/logrotate.d/${sentinel_instance_name}":
     ensure  => file,
     content => template('redis/sentinel_logrotate.conf.erb'),
     require => [
-      Package['logrotate'],
-      File["${redis_config_dir}/redis-sentinel_${sentinel_name}.conf"],
-    ]
+      File[$sentinel_config_script],
+    ],
+    owner  => 'root',   
   }
 
 }
